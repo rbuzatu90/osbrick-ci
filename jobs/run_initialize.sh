@@ -201,8 +201,7 @@ run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY 'mkdir -p /openstac
 echo `date -u +%H:%M:%S` "Started to unzip Fedora image.."
 run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY "gzip --decompress --force /home/ubuntu/devstack/files/images/Fedora-x86_64-20-20140618-sda.vhdx.gz"
 
-#Get IP addresses of the two Hyper-V hosts
-
+#Get IP addresses of the Hyper-V host.
 set +e
 IFS='' read -r -d '' PSCODE <<'_EOF'
 $NetIPAddr = Get-NetIPAddress | Where-Object {$_.InterfaceAlias -like "*br100*" -and $_.AddressFamily -like "IPv4"}
@@ -211,23 +210,17 @@ Write-Host $IPAddr
 _EOF
 HYPERV_GET_DATA_IP=`echo "$PSCODE" | iconv -f ascii -t utf16le | base64 -w0`
 hyperv01_ip=`run_wsman_cmd $hyperv01 $WIN_USER $WIN_PASS "powershell -ExecutionPolicy RemoteSigned -EncodedCommand $HYPERV_GET_DATA_IP" 2>&1 | grep -E -o '10\.0\.[0-9]{1,2}\.[0-9]{1,3}'`
-hyperv02_ip=`run_wsman_cmd $hyperv02 $WIN_USER $WIN_PASS "powershell -ExecutionPolicy RemoteSigned -EncodedCommand $HYPERV_GET_DATA_IP" 2>&1 | grep -E -o '10\.0\.[0-9]{1,2}\.[0-9]{1,3}'`
 set -e
 
 echo `date -u +%H:%M:%S` "Data IP of $hyperv01 is $hyperv01_ip"
-echo `date -u +%H:%M:%S` "Data IP of $hyperv02 is $hyperv02_ip"
 if [[ ! $hyperv01_ip =~ ^10\.0\.[0-9]{1,2}\.[0-9]{1,3} ]]; then
     echo "Did not receive a good IP for Hyper-V host $hyperv01 : $hyperv01_ip"
-    exit 1
-fi
-if [[ ! $hyperv02_ip =~ ^10\.0\.[0-9]{1,2}\.[0-9]{1,3} ]]; then
-    echo "Did not receive a good IP for Hyper-V host $hyperv02 : $hyperv02_ip"
     exit 1
 fi
 
 # Building devstack as a threaded job
 echo `date -u +%H:%M:%S` "Started to build devstack as a threaded job"
-nohup /usr/local/src/nova-ci/jobs/build_devstack.sh $hyperv01_ip $hyperv02_ip > /home/jenkins-slave/logs/devstack-build-log-$ZUUL_UUID 2>&1 &
+nohup /usr/local/src/nova-ci/jobs/build_devstack.sh $hyperv01_ip > /home/jenkins-slave/logs/devstack-build-log-$ZUUL_UUID 2>&1 &
 pid_devstack=$!
 
 # Building and joining HyperV nodes
@@ -235,9 +228,6 @@ echo `date -u +%H:%M:%S` "Started building & joining Hyper-V node: $hyperv01"
 nohup /usr/local/src/nova-ci/jobs/build_hyperv.sh $hyperv01 > /home/jenkins-slave/logs/hyperv-build-log-$ZUUL_UUID-$hyperv01 2>&1 &
 pid_hv01=$!
 
-echo `date -u +%H:%M:%S` "Started building & joining Hyper-V node: $hyperv02"
-nohup /usr/local/src/nova-ci/jobs/build_hyperv.sh $hyperv02 > /home/jenkins-slave/logs/hyperv-build-log-$ZUUL_UUID-$hyperv02 2>&1 &
-pid_hv02=$!
 
 TIME_COUNT=0
 PROC_COUNT=3
@@ -246,7 +236,6 @@ echo `date -u +%H:%M:%S` "Start waiting for parallel init jobs."
 
 finished_devstack=0;
 finished_hv01=0;
-finished_hv02=0;
 while [[ $TIME_COUNT -lt 60 ]] && [[ $PROC_COUNT -gt 0 ]]; do
     if [[ $finished_devstack -eq 0 ]]; then
         ps -p $pid_devstack > /dev/null 2>&1 || finished_devstack=$?
@@ -255,10 +244,6 @@ while [[ $TIME_COUNT -lt 60 ]] && [[ $PROC_COUNT -gt 0 ]]; do
     if [[ $finished_hv01 -eq 0 ]]; then
         ps -p $pid_hv01 > /dev/null 2>&1 || finished_hv01=$?
         [[ $finished_hv01 -ne 0 ]] && PROC_COUNT=$(( $PROC_COUNT - 1 )) && echo `date -u +%H:%M:%S` "Finished building $hyperv01"
-    fi
-    if [[ $finished_hv02 -eq 0 ]]; then
-        ps -p $pid_hv02 > /dev/null 2>&1 || finished_hv02=$?
-        [[ $finished_hv02 -ne 0 ]] && PROC_COUNT=$(( $PROC_COUNT - 1 )) && echo `date -u +%H:%M:%S` "Finished building $hyperv02"
     fi
     if [[ $PROC_COUNT -gt 0 ]]; then
         sleep 1m
@@ -281,20 +266,18 @@ fi
 if [[ $PROC_COUNT -gt 0 ]]; then
     kill -9 $pid_devstack > /dev/null 2>&1
     kill -9 $pid_hv01 > /dev/null 2>&1
-    kill -9 $pid_hv02 > /dev/null 2>&1
     echo "Not all build threads finished in time, initialization process failed."
     exit 1
 fi
 
 # HyperV post-build services restart
 post_build_restart_hyperv_services $hyperv01 $WIN_USER $WIN_PASS
-post_build_restart_hyperv_services $hyperv02 $WIN_USER $WIN_PASS
 
-# Check for nova join (must equal 2)
-run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY 'source /home/ubuntu/keystonerc; NOVA_COUNT=$(nova service-list | grep nova-compute | grep -c -w up); if [ "$NOVA_COUNT" != 2 ];then nova service-list; exit 1;fi' 12
+# Check for nova join (must equal 1)
+run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY 'source /home/ubuntu/keystonerc; NOVA_COUNT=$(nova service-list | grep nova-compute | grep -c -w up); if [ "$NOVA_COUNT" != 1 ];then nova service-list; exit 1;fi' 12
 run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY 'source /home/ubuntu/keystonerc; nova service-list' 1
 
-# Check for neutron join (must equal 2)
-run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY 'source /home/ubuntu/keystonerc; NEUTRON_COUNT=$(neutron agent-list | grep -c "HyperV agent.*:-)"); if [ "$NEUTRON_COUNT" != 2 ];then neutron agent-list; exit 1;fi' 12
+# Check for neutron join (must equal 1)
+run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY 'source /home/ubuntu/keystonerc; NEUTRON_COUNT=$(neutron agent-list | grep -c "HyperV agent.*:-)"); if [ "$NEUTRON_COUNT" != 1 ];then neutron agent-list; exit 1;fi' 12
 run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY 'source /home/ubuntu/keystonerc; neutron agent-list' 1
 

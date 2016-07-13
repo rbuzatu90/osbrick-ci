@@ -205,17 +205,6 @@ Add-Content "$env:APPDATA\pip\pip.ini" $pip_conf_content
 
 cp $templateDir\distutils.cfg "$pythonDir\Lib\distutils\distutils.cfg"
 
-function cherry_pick($commit) {
-    $eapSet = $ErrorActionPreference
-    $ErrorActionPreference = "Continue"
-    git cherry-pick $commit
-
-    if ($LastExitCode) {
-        echo "Ignoring failed git cherry-pick $commit"
-        git checkout --force
-    }
-    $ErrorActionPreference = $eapSet
-}
 
 if ($isDebug -eq  'yes') {
     Write-Host "BuildDir is: $buildDir"
@@ -248,19 +237,26 @@ ExecRetry {
     popd
 }
 
-if ($zuulChange -eq '273504') {
-    ExecRetry {
-        GitClonePull "$buildDir\os-brick" "https://git.openstack.org/openstack/os-brick.git" $branchName
 
-        pushd $buildDir\os-brick
+ExecRetry {
+    GitClonePull "$buildDir\os-brick" "https://git.openstack.org/openstack/os-brick.git" $branchName
 
-        git fetch https://git.openstack.org/openstack/os-brick refs/changes/22/272522/31
-        cherry_pick FETCH_HEAD
+    pushd $buildDir\os-brick
 
-        & pip install $buildDir\os-brick
-        popd
-    }
+
+    # TODO(lpetrut): remove those cherry-picks once all the Windows connectors get in.    
+    # The patch adding the Windows FC connector.
+    git fetch https://git.openstack.org/openstack/os-brick refs/changes/80/323780/8
+    cherry_pick FETCH_HEAD
+
+    # The patch adding the Windows SMBFS connector.
+    git fetch https://git.openstack.org/openstack/os-brick refs/changes/81/323781/8
+    cherry_pick FETCH_HEAD
+
+    & pip install $buildDir\os-brick
+    popd
 }
+
 
 ExecRetry {
     if ($isDebug -eq  'yes') {
@@ -269,8 +265,10 @@ ExecRetry {
     }
     pushd $buildDir\nova
 
-    # This patch attempts to fix the issue that is causing the nova-service to hang.
-    git fetch https://review.openstack.org/openstack/nova refs/changes/68/291668/2
+    # TODO(lpetrut): remove this once the nova patch that sets the Hyper-V driver to use
+    # os-brick gets in, or when this is implemented in compute-hyperv.
+    # Note: this patch may need to be rebased from time to time.
+    git fetch https://git.openstack.org/openstack/nova refs/changes/04/273504/9
     cherry_pick FETCH_HEAD
 
     & pip install $buildDir\nova

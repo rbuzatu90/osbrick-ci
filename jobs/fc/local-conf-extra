@@ -1,0 +1,21 @@
+[[local|localrc]]
+TEMPEST_VOLUME_DRIVER="3parFC"
+TEMPEST_VENDOR_NAME="Hewlett Packard Enterprise"
+TEMPEST_STORAGE_PROTOCOL=FC
+
+CINDER_ENABLED_BACKENDS=3PARFC
+
+[[post-config|$CINDER_CONF]]
+[3PARFC]
+volume_backend_name=3PARFC
+volume_driver=cinder.volume.drivers.san.hp.hp_3par_fc.HP3PARFCDriver
+hp3par_api_url=https://10.19.1.231:8080/api/v1
+hp3par_username=3paradm
+hp3par_password=3pardata
+hp3par_cpg=cpg_cinder
+hp3par_debug=true
+san_ip=10.19.1.231
+san_login=3paradm
+san_password=3pardata
+max_over_subscription_ratio=20.0
+reserved_percentage=15
