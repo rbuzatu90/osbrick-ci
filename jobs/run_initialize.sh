@@ -20,7 +20,7 @@
 source /home/jenkins-slave/tools/keystonerc_admin
 
 # Loading all the needed functions
-source /usr/local/src/nova-ci/jobs/library.sh
+source /usr/local/src/osbrick-ci/jobs/library.sh
 
 set -e
 
@@ -147,7 +147,7 @@ run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY 'DEBIAN_FRONTEND=no
 run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY "sudo ln -fs /usr/share/zoneinfo/UTC /etc/localtime" 1
 
 # copy files to devstack
-scp -v -r -o "StrictHostKeyChecking no" -o "UserKnownHostsFile /dev/null" -i $DEVSTACK_SSH_KEY /usr/local/src/nova-ci/devstack_vm/* ubuntu@$FLOATING_IP:/home/ubuntu/
+scp -v -r -o "StrictHostKeyChecking no" -o "UserKnownHostsFile /dev/null" -i $DEVSTACK_SSH_KEY /usr/local/src/osbrick-ci/devstack_vm/* ubuntu@$FLOATING_IP:/home/ubuntu/
 
 if [ "$ZUUL_BRANCH" != "master" ]; then
     run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY 'echo -e "tempest.api.compute.servers.test_server_rescue.ServerRescueTestJSON.\ntempest.api.compute.servers.test_server_rescue_negative.ServerRescueNegativeTestJSON." >> /home/ubuntu/bin/excluded-tests.txt'
@@ -157,7 +157,7 @@ ZUUL_SITE=`echo "$ZUUL_URL" |sed 's/.\{2\}$//'`
 echo ZUUL_SITE=$ZUUL_SITE >> /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.txt
 
 set +e
-VLAN_RANGE=`/usr/local/src/nova-ci/vlan_allocation.py -a $VMID`
+VLAN_RANGE=`/usr/local/src/osbrick-ci/vlan_allocation.py -a $VMID`
 if [ ! -z "$VLAN_RANGE" ]; then
     run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY "sed -i 's/TENANT_VLAN_RANGE.*/TENANT_VLAN_RANGE='$VLAN_RANGE'/g' /home/ubuntu/devstack/local.conf" 3
 fi
@@ -220,12 +220,12 @@ fi
 
 # Building devstack as a threaded job
 echo `date -u +%H:%M:%S` "Started to build devstack as a threaded job"
-nohup /usr/local/src/nova-ci/jobs/build_devstack.sh $hyperv01_ip > /home/jenkins-slave/logs/devstack-build-log-$ZUUL_UUID 2>&1 &
+nohup /usr/local/src/osbrick-ci/jobs/build_devstack.sh $hyperv01_ip > /home/jenkins-slave/logs/devstack-build-log-$ZUUL_UUID 2>&1 &
 pid_devstack=$!
 
 # Building and joining HyperV nodes
 echo `date -u +%H:%M:%S` "Started building & joining Hyper-V node: $hyperv01"
-nohup /usr/local/src/nova-ci/jobs/build_hyperv.sh $hyperv01 > /home/jenkins-slave/logs/hyperv-build-log-$ZUUL_UUID-$hyperv01 2>&1 &
+nohup /usr/local/src/osbrick-ci/jobs/build_hyperv.sh $hyperv01 > /home/jenkins-slave/logs/hyperv-build-log-$ZUUL_UUID-$hyperv01 2>&1 &
 pid_hv01=$!
 
 

@@ -1,2 +1,2 @@
-# nova-ci
-Cloudbase Hyper-V Nova CI
+# osbrick-ci
+Cloudbase Hyper-V os-brick CI

@@ -2,7 +2,7 @@
 #
 
 # Loading all the needed functions
-source /usr/local/src/nova-ci/jobs/library.sh
+source /usr/local/src/osbrick-ci/jobs/library.sh
 
 # Loading parameters
 source /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.txt
