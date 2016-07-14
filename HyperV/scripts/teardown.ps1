@@ -47,9 +47,13 @@ if ($(Get-Service neutron-hyperv-agent).Status -ne "Stopped"){
     Write-Host "Neutron service is in Stopped state"
 }
 
+
+
 Write-Host "Clearing any VMs that might have been left."
 Get-VM | where {$_.State -eq 'Running' -or $_.State -eq 'Paused'} | Stop-Vm -Force
 Remove-VM * -Force
+
+cleanup_iscsi_targets
 
 Write-Host "Cleaning the build folder."
 Remove-Item -Recurse -Force $buildDir\*

@@ -20,7 +20,7 @@ if [ "$IS_DEBUG_JOB" != "yes" ]
         
         echo "Deleting devstack floating IP"
         nova floating-ip-delete "$FLOATING_IP"
-        rm -f /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.txt
+        rm -f /home/jenkins-slave/runs/devstack_params.$JOB_TYPE.$ZUUL_UUID.txt
 fi
 
 set -e

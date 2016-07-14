@@ -24,7 +24,7 @@ source /usr/local/src/osbrick-ci/jobs/library.sh
 
 set -e
 
-NAME="nov-dvs-$ZUUL_CHANGE-$ZUUL_PATCHSET"
+NAME="brick-dvs-$JOB_TYPE-$ZUUL_CHANGE-$ZUUL_PATCHSET"
 if [[ ! -z $IS_DEBUG_JOB ]] && [[ $IS_DEBUG_JOB == "yes" ]]; then
 	NAME="$NAME-dbg"
 fi
@@ -220,12 +220,12 @@ fi
 
 # Building devstack as a threaded job
 echo `date -u +%H:%M:%S` "Started to build devstack as a threaded job"
-nohup /usr/local/src/osbrick-ci/jobs/build_devstack.sh $hyperv01_ip > /home/jenkins-slave/logs/devstack-build-log-$ZUUL_UUID 2>&1 &
+nohup /usr/local/src/osbrick-ci/jobs/build_devstack.sh $hyperv01_ip > /home/jenkins-slave/logs/devstack-build-log-$JOB_TYPE-$ZUUL_UUID 2>&1 &
 pid_devstack=$!
 
 # Building and joining HyperV nodes
 echo `date -u +%H:%M:%S` "Started building & joining Hyper-V node: $hyperv01"
-nohup /usr/local/src/osbrick-ci/jobs/build_hyperv.sh $hyperv01 > /home/jenkins-slave/logs/hyperv-build-log-$ZUUL_UUID-$hyperv01 2>&1 &
+nohup /usr/local/src/osbrick-ci/jobs/build_hyperv.sh $hyperv01 > /home/jenkins-slave/logs/hyperv-build-log-$JOB_TYPE-$ZUUL_UUID-$hyperv01 2>&1 &
 pid_hv01=$!
 
 

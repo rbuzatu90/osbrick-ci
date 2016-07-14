@@ -1,7 +1,7 @@
 Param(
     [Parameter(Mandatory=$true)][string]$devstackIP,
     [string]$branchName='master',
-    [string]$buildFor='openstack/nova',
+    [string]$buildFor='openstack/os-brick',
     [string]$isDebug='no',
     [string]$zuulChange=''
 )
@@ -20,8 +20,6 @@ $scriptLocation = [System.IO.Path]::GetDirectoryName($myInvocation.MyCommand.Def
 . "$scriptLocation\utils.ps1"
 
 $hasProject = Test-Path $buildDir\$projectName
-$hasNova = Test-Path $buildDir\nova
-$hasNeutron = Test-Path $buildDir\neutron
 $hasNeutronTemplate = Test-Path $neutronTemplate
 $hasNovaTemplate = Test-Path $novaTemplate
 $hasConfigDir = Test-Path $configDir
@@ -130,16 +128,14 @@ if ($isDebug -eq  'yes') {
 git config --global user.email "hyper-v_ci@microsoft.com"
 git config --global user.name "Hyper-V CI"
 
-
-if ($buildFor -eq "openstack/nova"){
-    ExecRetry {
-        GitClonePull "$buildDir\neutron" "https://git.openstack.org/openstack/neutron.git" $branchName
-    }
-    ExecRetry {
-        GitClonePull "$buildDir\networking-hyperv" "https://git.openstack.org/openstack/networking-hyperv.git" $branchName
-    }
-}else{
-    Throw "Cannot build for project: $buildFor"
+ExecRetry {
+    GitClonePull "$buildDir\nova" "https://git.openstack.org/openstack/neutron.git" $branchName
+}
+ExecRetry {
+    GitClonePull "$buildDir\neutron" "https://git.openstack.org/openstack/neutron.git" $branchName
+}
+ExecRetry {
+    GitClonePull "$buildDir\networking-hyperv" "https://git.openstack.org/openstack/networking-hyperv.git" $branchName
 }
 
 $hasLogDir = Test-Path $openstackLogs
@@ -239,10 +235,7 @@ ExecRetry {
 
 
 ExecRetry {
-    GitClonePull "$buildDir\os-brick" "https://git.openstack.org/openstack/os-brick.git" $branchName
-
     pushd $buildDir\os-brick
-
 
     # TODO(lpetrut): remove those cherry-picks once all the Windows connectors get in.    
     # The patch adding the Windows FC connector.
