@@ -230,7 +230,7 @@ pid_hv01=$!
 
 
 TIME_COUNT=0
-PROC_COUNT=3
+PROC_COUNT=2
 
 echo `date -u +%H:%M:%S` "Start waiting for parallel init jobs."
 
