@@ -5,7 +5,7 @@
 source /usr/local/src/osbrick-ci/jobs/library.sh
 
 # Loading parameters
-source /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.txt
+source /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.$JOB_TYPE.txt
 
 # Maybe this should not be hardcoded.
 SCRIPTS_DIR="/usr/local/src/osbrick-ci"

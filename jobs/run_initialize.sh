@@ -30,10 +30,10 @@ if [[ ! -z $IS_DEBUG_JOB ]] && [[ $IS_DEBUG_JOB == "yes" ]]; then
 fi
 export NAME=$NAME
 
-echo NAME=$NAME >> /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.txt
+echo NAME=$NAME >> /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.$JOB_TYPE.txt
 
 NET_ID=$(nova net-list | grep private| awk '{print $2}')
-echo NET_ID=$NET_ID >> /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.txt
+echo NET_ID=$NET_ID >> /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.$JOB_TYPE.txt
 
 echo NAME=$NAME
 echo NET_ID=$NET_ID
@@ -47,7 +47,7 @@ echo "Deploying devstack $NAME"
 VMID=$(nova boot --availability-zone hyper-v --flavor nova.devstack --image $devstack_image --key-name default --security-groups devstack --nic net-id="$NET_ID" "$NAME" --poll | awk '{if (NR == 21) {print $4}}')
 NOVABOOT_EXIT=$?
 export VMID=$VMID
-echo VMID=$VMID >>  /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.txt
+echo VMID=$VMID >>  /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.$JOB_TYPE.txt
 echo VMID=$VMID
 
 if [ $NOVABOOT_EXIT -ne 0 ]; then
@@ -72,7 +72,7 @@ FLOATING_IP=$(nova floating-ip-create public | awk '{print $2}'|sed '/^$/d' | ta
 if [ -z "$FLOATING_IP" ]; then
    exit 1
 fi
-echo FLOATING_IP=$FLOATING_IP >> /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.txt
+echo FLOATING_IP=$FLOATING_IP >> /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.$JOB_TYPE.txt
 
 echo FLOATING_IP=$FLOATING_IP
 exec_with_retry "nova add-floating-ip $VMID $FLOATING_IP" 15 5 || { echo "nova show $VMID:"; nova show "$VMID"; echo "nova console-log $VMID:"; nova console-log "$VMID"; exit 1; }
@@ -118,7 +118,7 @@ while [ -z "$FIXED_IP" ]; do
     fi
 done
 
-echo FIXED_IP=$FIXED_IP >> /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.txt
+echo FIXED_IP=$FIXED_IP >> /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.$JOB_TYPE.txt
 echo "FIXED_IP=$FIXED_IP"
 
 echo "nova show $VMID:"
@@ -154,7 +154,7 @@ if [ "$ZUUL_BRANCH" != "master" ]; then
 fi
 
 ZUUL_SITE=`echo "$ZUUL_URL" |sed 's/.\{2\}$//'`
-echo ZUUL_SITE=$ZUUL_SITE >> /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.txt
+echo ZUUL_SITE=$ZUUL_SITE >> /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.$JOB_TYPE.txt
 
 set +e
 VLAN_RANGE=`/usr/local/src/osbrick-ci/vlan_allocation.py -a $VMID`
@@ -171,7 +171,7 @@ nova interface-attach --net-id "$NET_ID" "$VMID"
 # update repos
 run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY "/home/ubuntu/bin/update_devstack_repos.sh --branch $ZUUL_BRANCH --build-for $ZUUL_PROJECT" 1
 
-echo ZUUL_SITE=$ZUUL_SITE >> /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.txt
+echo ZUUL_SITE=$ZUUL_SITE >> /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.$JOB_TYPE.txt
 
 # Set ZUUL IP in hosts file
 if  ! grep -qi zuul /etc/hosts ; then
@@ -220,12 +220,12 @@ fi
 
 # Building devstack as a threaded job
 echo `date -u +%H:%M:%S` "Started to build devstack as a threaded job"
-nohup /usr/local/src/osbrick-ci/jobs/build_devstack.sh $hyperv01_ip > /home/jenkins-slave/logs/devstack-build-log-$JOB_TYPE-$ZUUL_UUID 2>&1 &
+nohup /usr/local/src/osbrick-ci/jobs/build_devstack.sh $hyperv01_ip > /home/jenkins-slave/logs/devstack-build-log-$ZUUL_UUID-$JOB_TYPE 2>&1 &
 pid_devstack=$!
 
 # Building and joining HyperV nodes
 echo `date -u +%H:%M:%S` "Started building & joining Hyper-V node: $hyperv01"
-nohup /usr/local/src/osbrick-ci/jobs/build_hyperv.sh $hyperv01 > /home/jenkins-slave/logs/hyperv-build-log-$JOB_TYPE-$ZUUL_UUID-$hyperv01 2>&1 &
+nohup /usr/local/src/osbrick-ci/jobs/build_hyperv.sh $hyperv01 > /home/jenkins-slave/logs/hyperv-build-log-$ZUUL_UUID-$JOB_TYPE-$hyperv01 2>&1 &
 pid_hv01=$!
 
 
@@ -258,9 +258,9 @@ OSTACK_PROJECT=`echo "$ZUUL_PROJECT" | cut -d/ -f2`
 
 if [[ ! -z $IS_DEBUG_JOB ]] && [[ $IS_DEBUG_JOB == "yes" ]]
     then
-        echo "All build logs can be found in http://64.119.130.115/debug/$OSTACK_PROJECT/$ZUUL_CHANGE/$ZUUL_PATCHSET/"
+        echo "All build logs can be found in http://64.119.130.115/debug/$OSTACK_PROJECT/$ZUUL_CHANGE/$ZUUL_PATCHSET/$JOB_TYPE/"
     else
-        echo "All build logs can be found in http://64.119.130.115/$OSTACK_PROJECT/$ZUUL_CHANGE/$ZUUL_PATCHSET/"
+        echo "All build logs can be found in http://64.119.130.115/$OSTACK_PROJECT/$ZUUL_CHANGE/$ZUUL_PATCHSET/$JOB_TYPE/"
 fi
 
 if [[ $PROC_COUNT -gt 0 ]]; then
