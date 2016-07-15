@@ -5,7 +5,7 @@ hyperv_node=$1
 source /usr/local/src/osbrick-ci/jobs/library.sh
 
 # Loading parameters
-source /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.txt
+source /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.$JOB_TYPE.txt
 
 # building HyperV node
 echo $hyperv_node

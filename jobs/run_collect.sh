@@ -1,4 +1,4 @@
-source /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.txt
+source /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.$JOB_TYPE.txt
 source /home/jenkins-slave/tools/keystonerc_admin
 source /usr/local/src/osbrick-ci/jobs/library.sh
 
@@ -25,7 +25,7 @@ echo "Collecting logs"
 ssh -o "UserKnownHostsFile /dev/null" -o "StrictHostKeyChecking no" -i $DEVSTACK_SSH_KEY ubuntu@$FLOATING_IP "/home/ubuntu/bin/collect_logs.sh"
 
 if [ "$IS_DEBUG_JOB" != "yes" ]; then
-    LOGDEST="/srv/logs/$logs_project/$ZUUL_CHANGE/$ZUUL_PATCHSET/JOB_TYPE"
+    LOGDEST="/srv/logs/$logs_project/$ZUUL_CHANGE/$ZUUL_PATCHSET/$JOB_TYPE"
 else
     TIMESTAMP=$(date +%d-%m-%Y_%H-%M)
     LOGDEST="/srv/logs/debug/$logs_project/$ZUUL_CHANGE/$ZUUL_PATCHSET/$JOB_TYPE/$TIMESTAMP" 
@@ -40,10 +40,10 @@ scp -o "UserKnownHostsFile /dev/null" -o "StrictHostKeyChecking no" -i $DEVSTACK
 
 echo "Uploading logs"
 scp -o "UserKnownHostsFile /dev/null" -o "StrictHostKeyChecking no" -i $LOGS_SSH_KEY "aggregate-$VMID.tar.gz" logs@logs.openstack.tld:$LOGDEST/aggregate-logs.tar.gz
-gzip -9 /home/jenkins-slave/logs/console-$JOB_TYPE-$ZUUL_UUID.log
+gzip -9 /home/jenkins-slave/logs/console-$ZUUL_UUID-$JOB_TYPE.log
 scp -o "UserKnownHostsFile /dev/null" -o "StrictHostKeyChecking no" -i $LOGS_SSH_KEY \
-    "/home/jenkins-slave/logs/console-$JOB_TYPE-$ZUUL_UUID.log.gz" \
-    logs@logs.openstack.tld:$LOGDEST/console.log.gz && rm -f /home/jenkins-slave/logs/console-$JOB_TYPE-$ZUUL_UUID.log.gz
+    "/home/jenkins-slave/logs/console-$ZUUL_UUID-$JOB_TYPE.log.gz" \
+    logs@logs.openstack.tld:$LOGDEST/console.log.gz && rm -f /home/jenkins-slave/logs/console-$ZUUL_UUID-$JOB_TYPE.log.gz
 
 echo "Extracting logs"
 ssh -o "UserKnownHostsFile /dev/null" -o "StrictHostKeyChecking no" -i $LOGS_SSH_KEY logs@logs.openstack.tld \ 
@@ -51,10 +51,10 @@ ssh -o "UserKnownHostsFile /dev/null" -o "StrictHostKeyChecking no" -i $LOGS_SSH
 
 echo "Uploading temporary logs"
 scp -o "UserKnownHostsFile /dev/null" -o "StrictHostKeyChecking no" -i $LOGS_SSH_KEY  \
-    "/home/jenkins-slave/logs/hyperv-build-log-$JOB_TYPE-$ZUUL_UUID-$hyperv01" \
-    logs@logs.openstack.tld:$LOGDEST/hyperv-build-log-$ZUUL_UUID-$hyperv01.log
+    "/home/jenkins-slave/logs/hyperv-build-log-$ZUUL_UUID-$JOB_TYPE-$hyperv01" \
+    logs@logs.openstack.tld:$LOGDEST/hyperv-build-log-$ZUUL_UUID-$JOB_TYPE-$hyperv01.log
 scp -o "UserKnownHostsFile /dev/null" -o "StrictHostKeyChecking no" -i $LOGS_SSH_KEY  \
-    "/home/jenkins-slave/logs/devstack-build-log-$JOB_TYPE-$ZUUL_UUID" logs@logs.openstack.tld:$LOGDEST/devstack-build-log-$ZUUL_UUID.log
+    "/home/jenkins-slave/logs/devstack-build-log-$ZUUL_UUID-$JOB_TYPE" logs@logs.openstack.tld:$LOGDEST/devstack-build-log-$ZUUL_UUID-$JOB_TYPE.log
 
 echo "Fixing permissions on all log files"
 ssh -o "UserKnownHostsFile /dev/null" -o "StrictHostKeyChecking no" -i $LOGS_SSH_KEY \
@@ -64,10 +64,10 @@ echo "Removing local copy of aggregate logs"
 rm -fv aggregate-$VMID.tar.gz
 
 echo "Removing HyperV temporary console logs.."
-rm -fv /home/jenkins-slave/logs/hyperv-build-log-$JOB_TYPE-$ZUUL_UUID-$hyperv01
+rm -fv /home/jenkins-slave/logs/hyperv-build-log-$ZUUL_UUID-$JOB_TYPE-$hyperv01
 
 echo "Removing temporary devstack log.."
-rm -fv /home/jenkins-slave/logs/devstack-build-log-$JOB_TYPE-$ZUUL_UUID    
+rm -fv /home/jenkins-slave/logs/devstack-build-log-$ZUUL_UUID-$JOB_TYPE
 
 echo `date -u +%H:%M:%S`
 set -e
