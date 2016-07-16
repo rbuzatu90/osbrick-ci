@@ -13,9 +13,6 @@ nova flavor-create m1.nano 42 96 1 1
 nova flavor-delete 84
 nova flavor-create m1.micro 84 128 2 1
 
-nova flavor-delete 451
-nova flavor-create m1.heat 451 512 5 1
-
 echo "After updating nova flavors:"
 nova flavor-list
 
