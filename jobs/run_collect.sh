@@ -7,7 +7,7 @@ if [ -z "$ZUUL_CHANGE" ] || [ -z "$ZUUL_PATCHSET" ] || [ -z "$JOB_TYPE" ]; then
     exit 1
 fi
 
-logs_project=osbrick
+logs_project=os-brick
 
 set +e
 
