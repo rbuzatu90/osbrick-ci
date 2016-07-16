@@ -129,7 +129,7 @@ git config --global user.email "hyper-v_ci@microsoft.com"
 git config --global user.name "Hyper-V CI"
 
 ExecRetry {
-    GitClonePull "$buildDir\nova" "https://git.openstack.org/openstack/neutron.git" $branchName
+    GitClonePull "$buildDir\nova" "https://git.openstack.org/openstack/nova.git" $branchName
 }
 ExecRetry {
     GitClonePull "$buildDir\neutron" "https://git.openstack.org/openstack/neutron.git" $branchName
