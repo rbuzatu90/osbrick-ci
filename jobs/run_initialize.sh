@@ -37,6 +37,8 @@ echo NET_ID=$NET_ID >> /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.$JOB_
 
 echo NAME=$NAME
 echo NET_ID=$NET_ID
+echo ZUUL_UUID=$ZUUL_UUID
+echo JOB_TYPE=$JOB_TYPE
 
 devstack_image="devstack-77v3"
 

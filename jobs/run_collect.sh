@@ -2,7 +2,7 @@ source /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.$JOB_TYPE.txt
 source /home/jenkins-slave/tools/keystonerc_admin
 source /usr/local/src/osbrick-ci/jobs/library.sh
 
-if [ -z "$ZUUL_CHANGE" ] || [ -z "$ZUUL_PATCHSET" ] || [ -z "$JOB_TYPE"]; then
+if [ -z "$ZUUL_CHANGE" ] || [ -z "$ZUUL_PATCHSET" ] || [ -z "$JOB_TYPE" ]; then
     echo "Missing parameters! ZUUL_CHANGE: $ZUUL_CHANGE, ZUUL_PATCHSET: $ZUUL_PATCHSET, $JOB_TYPE: $JOB_TYPE"
     exit 1
 fi
