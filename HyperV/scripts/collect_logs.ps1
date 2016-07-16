@@ -1,5 +1,5 @@
 Param(
-    [Parameter(Mandatory=$true)][string]$devstackIP,
+    [Parameter(Mandatory=$true)][string]$devstackIP
 )
 
 $scriptLocation = [System.IO.Path]::GetDirectoryName($myInvocation.MyCommand.Definition)
