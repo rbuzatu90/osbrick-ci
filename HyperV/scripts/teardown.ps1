@@ -2,6 +2,7 @@
 
 . "C:\OpenStack\osbrick-ci\HyperV\scripts\config.ps1"
 . "C:\OpenStack\osbrick-ci\HyperV\scripts\utils.ps1"
+. "C:\OpenStack\osbrick-ci\HyperV\scripts\iscsi_utils.ps1"
 
 # end Loading config
 
