@@ -2,6 +2,7 @@ Param(
     [Parameter(Mandatory=$true)][string]$devstackIP,
     [string]$branchName='master',
     [string]$buildFor='openstack/os-brick',
+    [string]$jobType='iscsi',
     [string]$isDebug='no',
     [string]$zuulChange=''
 )
@@ -40,6 +41,7 @@ $ErrorActionPreference = "SilentlyContinue"
 Write-Host "Ensuring nova and neutron services are stopped."
 Stop-Service -Name nova-compute -Force
 Stop-Service -Name neutron-hyperv-agent -Force
+Stop-Service -Name cinder-volume -Force
 
 Write-Host "Stopping any possible python processes left."
 Stop-Process -Name python -Force
@@ -68,12 +70,21 @@ if (-not (get-service nova-compute -ErrorAction SilentlyContinue))
     Throw "Nova Compute Service not registered"
 }
 
+if (-not (get-service cinder-volume -ErrorAction SilentlyContinue))
+{
+    Throw "Cinder Volume Service not registered"
+}
+
 if ($(Get-Service nova-compute).Status -ne "Stopped"){
     Throw "Nova service is still running"
 }
 
 if ($(Get-Service neutron-hyperv-agent).Status -ne "Stopped"){
     Throw "Neutron service is still running"
+}
+
+if ($(Get-Service cinder-volume).Status -ne "Stopped"){
+    Throw "Cinder service is still running"
 }
 
 Write-Host "Cleaning up the config folder."
@@ -138,6 +149,13 @@ ExecRetry {
     GitClonePull "$buildDir\networking-hyperv" "https://git.openstack.org/openstack/networking-hyperv.git" $branchName
 }
 
+if ($jobType -eq 'smbfs')
+{
+    ExecRetry {
+        GitClonePull "$buildDir\cinder" "https://git.openstack.org/openstack/cinder.git" $branchName
+    }    
+}
+
 $hasLogDir = Test-Path $openstackLogs
 if ($hasLogDir -eq $false){
     mkdir $openstackLogs
@@ -179,6 +197,8 @@ Add-Content "$env:APPDATA\pip\pip.ini" $pip_conf_content
 
 & easy_install -U pip
 & pip install -U setuptools
+& pip install -U virtualenv
+& pip install -U distribute
 & pip install -U --pre pymi
 & pip install cffi
 & pip install numpy
@@ -186,6 +206,7 @@ Add-Content "$env:APPDATA\pip\pip.ini" $pip_conf_content
 & pip install -U os-win
 & pip install amqp==1.4.9
 & pip install cffi==1.6.0
+& pip install pymysql
 
 popd
 
@@ -233,6 +254,37 @@ ExecRetry {
     popd
 }
 
+if($jobType -eq 'smbfs')
+{
+    ExecRetry {
+        if ($isDebug -eq  'yes') {
+            Write-Host "Content of $buildDir\cinder"
+            Get-ChildItem $buildDir\cinder
+        }
+        pushd $buildDir\cinder
+
+        git remote add downstream https://github.com/petrutlucian94/cinder
+        
+        ExecRetry {
+            git fetch downstream
+            if ($LastExitCode) { Throw "Failed fetching remote downstream petrutlucian94" }
+        }
+
+        git checkout -b "testBranch"
+        if ($branchName.ToLower() -eq "master") {
+            cherry_pick dcd839978ca8995cada8a62a5f19d21eaeb399df
+            cherry_pick f711195367ead9a2592402965eb7c7a73baebc9f
+        }
+        else {
+            cherry_pick 0c13ba732eb5b44e90a062a1783b29f2718f3da8
+            cherry_pick 06ee0b259daf13e8c0028a149b3882f1e3373ae1
+        }
+
+        & pip install $buildDir\cinder
+        if ($LastExitCode) { Throw "Failed to install cinder from repo" }
+        popd
+    }
+}
 
 ExecRetry {
     pushd $buildDir\os-brick
@@ -290,6 +342,11 @@ if ($? -eq $false){
 cp "$templateDir\policy.json" "$configDir\"
 cp "$templateDir\interfaces.template" "$configDir\"
 
+if ($jobType -eq 'smbfs')
+{
+    & $scriptLocation\generateCinderCfg.ps1 $configDir $cinderTemplate $devstackIP $rabbitUser $remoteLogs $lockPath
+}
+
 $hasNovaExec = Test-Path "$pythonScripts\nova-compute.exe"
 if ($hasNovaExec -eq $false){
     Throw "No nova-compute.exe found"
@@ -305,6 +362,50 @@ Remove-Item -Recurse -Force "$remoteConfigs\$hostname\*"
 Copy-Item -Recurse $configDir "$remoteConfigs\$hostname"
 
 Write-Host "Starting the services"
+
+
+
+if ($jobType -eq 'smbfs')
+{
+    $currDate = (Get-Date).ToString()
+    Write-Host "$currDate Starting cinder-volume service"
+    Try
+    {
+        Start-Service cinder-volume
+    }
+    Catch
+    {
+        Write-Host "Can not start the cinder-volume service."
+    }
+    Start-Sleep -s 30
+    if ($(get-service cinder-volume).Status -eq "Stopped")
+    {
+        Write-Host "cinder-volume service is not running."
+        $currDate = (Get-Date).ToString()
+        Write-Host "$currDate We try to start:"
+        Write-Host Start-Process -PassThru -RedirectStandardError "$openstackLogs\process_error.txt" -RedirectStandardOutput "$openstackLogs\process_output.txt" -FilePath "$pythonDir\Scripts\cinder-volume.exe" -ArgumentList "--config-file $configDir\cinder.conf"
+        $currDate = (Get-Date).ToString()
+        Add-Content "$openstackLogs\cinder-volume.log" "`n$currDate Starting cinder-volume as a python process."
+        Try
+        {
+            $proc = Start-Process -PassThru -RedirectStandardError "$openstackLogs\process_error.txt" -RedirectStandardOutput "$openstackLogs\process_output.txt" -FilePath "$pythonDir\Scripts\cinder-volume.exe" -ArgumentList "--config-file $configDir\cinder.conf"
+        }
+        Catch
+        {
+            Throw "Could not start the process manually"
+        }
+        Start-Sleep -s 30
+        if (! $proc.HasExited)
+        {
+            Stop-Process -Id $proc.Id -Force
+            Throw "Process started fine when run manually."
+        }
+        else
+        {
+            Throw "Can not start the cinder-volume service. The manual run failed as well."
+        }
+    }
+}
 
 $currDate = (Get-Date).ToString()
 Write-Host "$currDate Starting nova-compute service"

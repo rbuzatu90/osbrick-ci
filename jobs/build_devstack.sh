@@ -28,10 +28,6 @@ function update_local_conf (){
 
 hyperv01=$1
 
-# Set up the smbfs shares list
-run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY "sudo mkdir -p /etc/cinder && sudo chown ubuntu /etc/cinder" 6
-run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY "sudo echo //$FLOATING_IP/openstack/volumes -o guest > /etc/cinder/smbfs_shares_config" 6
-
 # Update local conf
 update_local_conf
 
