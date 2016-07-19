@@ -151,5 +151,5 @@ function cherry_pick($commit) {
 }
 
 function log_message($message){
-    echo "[$(Get-Date)] $message"
+    Write-Host "[$(Get-Date)] $message"
 }
