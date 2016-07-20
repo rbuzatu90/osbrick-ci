@@ -153,3 +153,24 @@ function cherry_pick($commit) {
 function log_message($message){
     Write-Host "[$(Get-Date)] $message"
 }
+
+function expand_template($template)
+{
+    $expanded_template = ''
+    foreach($line in $template)
+    {
+        $expanded_line = $ExecutionContext.InvokeCommand.ExpandString($line)
+        $expanded_template += "$expanded_line`r`n"
+    }
+    return $expanded_template
+}
+
+function unzip($src, $dest) {
+
+    $shell = new-object -com shell.application
+    $zip = $shell.NameSpace($src)
+    foreach($item in $zip.items())
+    {
+        $shell.Namespace($dest).copyhere($item)
+    }
+}

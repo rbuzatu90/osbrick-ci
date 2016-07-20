@@ -7,17 +7,10 @@ Param(
     [Parameter(Mandatory=$true)][string]$lockPath
 )
 
+$scriptLocation = [System.IO.Path]::GetDirectoryName($myInvocation.MyCommand.Definition)
+. "$scriptLocation\utils.ps1"
 
-function unzip($src, $dest) {
 
-	$shell = new-object -com shell.application
-	$zip = $shell.NameSpace($src)
-	foreach($item in $zip.items())
-	{
-		$shell.Namespace($dest).copyhere($item)
-	}
-
-}
 $serverIP =  (Get-NetIPAddress -AddressFamily IPv4 -PrefixOrigin Dhcp).IPAddress
 $volumeDriver = 'cinder.volume.drivers.windows.smbfs.WindowsSmbfsDriver'
 $smbSharesConfigPath = "$configDir\smbfs_shares_config.txt"
