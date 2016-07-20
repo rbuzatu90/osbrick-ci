@@ -3,7 +3,7 @@ source /home/jenkins-slave/tools/keystonerc_admin
 source /usr/local/src/osbrick-ci/jobs/library.sh
 
 if [ -z "$ZUUL_CHANGE" ] || [ -z "$ZUUL_PATCHSET" ] || [ -z "$JOB_TYPE" ]; then
-    echo "Missing parameters! ZUUL_CHANGE: $ZUUL_CHANGE, ZUUL_PATCHSET: $ZUUL_PATCHSET, $JOB_TYPE: $JOB_TYPE"
+    echo "Missing parameters! ZUUL_CHANGE: $ZUUL_CHANGE, ZUUL_PATCHSET: $ZUUL_PATCHSET, JOB_TYPE: $JOB_TYPE"
     exit 1
 fi
 
@@ -46,8 +46,7 @@ scp -o "UserKnownHostsFile /dev/null" -o "StrictHostKeyChecking no" -i $LOGS_SSH
     logs@logs.openstack.tld:$LOGDEST/console.log.gz && rm -f /home/jenkins-slave/logs/console-$ZUUL_UUID-$JOB_TYPE.log.gz
 
 echo "Extracting logs"
-ssh -o "UserKnownHostsFile /dev/null" -o "StrictHostKeyChecking no" -i $LOGS_SSH_KEY logs@logs.openstack.tld \ 
-    "tar -xzf $LOGDEST/aggregate-logs.tar.gz -C $LOGDEST/"
+ssh -o "UserKnownHostsFile /dev/null" -o "StrictHostKeyChecking no" -i $LOGS_SSH_KEY logs@logs.openstack.tld "tar -xzf $LOGDEST/aggregate-logs.tar.gz -C $LOGDEST/"
 
 echo "Uploading temporary logs"
 scp -o "UserKnownHostsFile /dev/null" -o "StrictHostKeyChecking no" -i $LOGS_SSH_KEY  \
