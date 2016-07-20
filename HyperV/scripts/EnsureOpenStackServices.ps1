@@ -356,6 +356,11 @@ $neutronServiceDescription = "OpenStack Neutron Hyper-V Agent Service"
 $neutronServiceExecutable = "$virtualenv\Scripts\neutron-hyperv-agent.exe"
 $neutronServiceConfig = "$configDir\neutron_hyperv_agent.conf"
 
+$cinderServiceName = "cinder-volume"
+$cinderServiceDescription = "OpenStack Cinder Volume Service"
+$cinderServiceExecutable = "$virtualenv\Scripts\cinder-volume.exe"
+$cinderServiceConfig = "$configDir\cinder.conf"
+
 function SetUserLogonAsServiceRights($UserName)
 {
     $privilege = "SeServiceLogonRight"
@@ -510,3 +515,5 @@ Function Check-Service
 Check-Service $novaServiceName $novaServiceDescription $novaServiceExecutable $novaServiceConfig
 
 Check-Service $neutronServiceName $neutronServiceDescription $neutronServiceExecutable $neutronServiceConfig
+
+Check-Service $cinderServiceName $cinderServiceDescription $cinderServiceExecutable $cinderServiceConfig

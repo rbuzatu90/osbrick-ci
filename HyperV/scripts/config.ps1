@@ -26,3 +26,6 @@ $eventlogPath="C:\OpenStack\Logs\Eventlog"
 $eventlogcsspath = "$templateDir\eventlog_css.txt"
 $eventlogjspath = "$templateDir\eventlog_js.txt"
 $downloadLocation = "http://10.0.110.1/"
+
+$cinderTemplate = "$templateDir\cinder.conf"
+$lockPath = "C:\Openstack\locks"
