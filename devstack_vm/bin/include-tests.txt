@@ -3,6 +3,5 @@
 # that are meaningful for os-brick. We'll do the same.
 
 tempest.scenario.test_minimum_basic
-tempest.scenario.test_snapshot_pattern
 tempest.scenario.test_stamp_pattern
 tempest.scenario.test_volume_boot_pattern
