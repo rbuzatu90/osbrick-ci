@@ -26,23 +26,6 @@ Write-Host "Config file:"
 Write-Host $config
 sc $configFile $config
 
-# FIX FOR qmeu-img - fetch locally compiled one
-if (! (Test-Path -Path c:\qemu-img))
-{
-         mkdir c:\qemu-img
-}
-Invoke-WebRequest -Uri http://10.0.110.1/qemu-img-cbsl-build.zip -OutFile c:\qemu-img\qemu-img-cbsl-build.zip
-if (! (Test-Path -Path c:\qemu2))
-{
-	mkdir c:\qemu2
-}
-#else
-#{
-#	Remove-Item -Force -Recurse c:\qemu2
-#}
-unzip c:\qemu-img\qemu-img-cbsl-build.zip c:\qemu2
-Move-Item -Path C:\qemu2\* -Destination C:\qemu-img\ -Force
-
 # Ensure Windows Share is available
 if (! (Test-Path -Path C:\SMBShare))
 {
