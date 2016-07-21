@@ -205,8 +205,8 @@ Add-Content "$env:APPDATA\pip\pip.ini" $pip_conf_content
 & pip install pycrypto
 & pip install -U os-win
 & pip install amqp==1.4.9
-& pip install cffi==1.6.0
 & pip install pymysql
+& pip install mysqlclient
 
 popd
 
