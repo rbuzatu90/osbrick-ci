@@ -166,11 +166,5 @@ function expand_template($template)
 }
 
 function unzip($src, $dest) {
-
-    $shell = new-object -com shell.application
-    $zip = $shell.NameSpace($src)
-    foreach($item in $zip.items())
-    {
-        $shell.Namespace($dest).copyhere($item)
-    }
+    & $7zExec -y -o"$dest" x "$src"
 }
