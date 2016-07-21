@@ -1,6 +1,9 @@
 # This script restart the nova and neutron services and cleans logs
 # Needed to compensate for HyperV building ahead of time
 #
+Param(
+    [string]$jobType='iscsi'
+)
 
 . "C:\OpenStack\osbrick-ci\HyperV\scripts\config.ps1"
 . "C:\OpenStack\osbrick-ci\HyperV\scripts\utils.ps1"
@@ -11,6 +14,11 @@ Write-Host "post-build: Stoping the services!"
 Stop-Service nova-compute
 
 Stop-Service neutron-hyperv-agent
+
+if ($JOB_TYPE -eq "smbfs")
+{
+    Stop-Service cinder-volume
+}
 
 Write-Host "post-build: Cleaning previous logs!"
 
@@ -92,3 +100,42 @@ if ($(get-service neutron-hyperv-agent).Status -eq "Stopped")
     }
 }
 
+if ($JOB_TYPE -eq "smbfs")
+    {
+    Write-Host "Starting cinder-volume service"
+    Try
+    {
+        Start-Service cinder-volume
+    }
+    Catch
+    {
+        $proc = Start-Process -PassThru -RedirectStandardError "$openstackLogs\process_error.txt" -RedirectStandardOutput "$openstackLogs\process_output.txt" -FilePath "$pythonScripts\cinder-volume.exe" -ArgumentList "--config-file $configDir\cinder.conf"
+        Start-Sleep -s 30
+        if (! $proc.HasExited) {Stop-Process -Id $proc.Id -Force}
+        Throw "Can not start the cinder-volume service"
+    }
+    Start-Sleep -s 30
+    if ($(get-service cinder-volume).Status -eq "Stopped")
+    {
+        Write-Host "We try to start:"
+        Write-Host Start-Process -PassThru -RedirectStandardError "$openstackLogs\process_error.txt" -RedirectStandardOutput "$openstackLogs\process_output.txt" -FilePath "$pythonScripts\cinder-volume.exe" -ArgumentList "--config-file $configDir\cinder.conf"
+        Try
+        {
+            $proc = Start-Process -PassThru -RedirectStandardError "$openstackLogs\process_error.txt" -RedirectStandardOutput "$openstackLogs\process_output.txt" -FilePath "$pythonScripts\cinder-volume.exe" -ArgumentList "--config-file $configDir\cinder.conf"
+        }
+        Catch
+        {
+            Throw "Could not start the process manually"
+        }
+        Start-Sleep -s 30
+        if (! $proc.HasExited)
+        {
+            Stop-Process -Id $proc.Id -Force
+            Throw "Process started fine when run manually."
+        }
+        else
+        {
+            Throw "Can not start the cinder-volume service. The manual run failed as well."
+        }
+    }
+}
