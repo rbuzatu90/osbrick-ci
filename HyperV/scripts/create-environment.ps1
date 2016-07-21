@@ -27,6 +27,9 @@ $hasConfigDir = Test-Path $configDir
 $hasBinDir = Test-Path $binDir
 $hasMkisoFs = Test-Path $binDir\mkisofs.exe
 $hasQemuImg = Test-Path $binDir\qemu-img.exe
+if ($hasQemuImg) {
+    $hasOldQemuImg = $(& $binDir\qemu-img.exe --version | sls "qemu-img version 1.2.0").Matches.Success
+}
 
 $pip_conf_content = @"
 [global]
@@ -111,7 +114,7 @@ if ($hasBinDir -eq $false){
     mkdir $binDir
 }
 
-if (($hasMkisoFs -eq $false) -or ($hasQemuImg -eq $false)){
+if (($hasMkisoFs -eq $false) -or ($hasQemuImg -eq $false) -or ($hasOldQemuImg -eq $true)){
     Invoke-WebRequest -Uri "http://10.0.110.1/openstack_bin.zip" -OutFile "$bindir\openstack_bin.zip"
     if (Test-Path "$7zExec"){
         pushd $bindir
