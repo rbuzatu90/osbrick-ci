@@ -344,7 +344,7 @@ cp "$templateDir\interfaces.template" "$configDir\"
 
 if ($jobType -eq 'smbfs')
 {
-    & $scriptLocation\generateCinderCfg.ps1 $configDir $cinderTemplate $devstackIP $rabbitUser $remoteLogs $lockPath
+    & $scriptLocation\generateCinderCfg.ps1 $configDir $cinderTemplate $devstackIP $rabbitUser $openstackLogs $lockPath
 }
 
 $hasNovaExec = Test-Path "$pythonScripts\nova-compute.exe"
