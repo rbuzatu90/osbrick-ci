@@ -59,7 +59,7 @@ cleanup_iscsi_targets
 if (Get-SMBShare -Name $cinderShareName)
 {
     log_message "Removing cinder volume share."
-    Remove-SMBShare -Name $cinderShareName
+    Remove-SMBShare -Name $cinderShareName -Force
 }
 
 if (Test-Path -Path $volumeShareDir)
