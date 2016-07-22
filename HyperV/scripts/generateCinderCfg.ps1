@@ -37,7 +37,7 @@ if (!(Get-SMBShare -Name SMBShare))
     $hostname=hostname
     New-SMBShare -Name SMBShare -Path C:\SMBShare -FullAccess "$hostname\Administrator"
 }
-Grant-SmbShareAccess -Name SMBShare -AccountName Administrator -AccessRight Full -Force
-Grant-SmbShareAccess -Name SMBShare -AccountName ad.openstack.tld\Administrator -AccessRight Full -Force
+
+Grant-SmbShareAccess -Name SMBShare -AccountName Everyone -AccessRight Full -Force
 # This will update the filesystem ACLs as well.
 Set-SmbPathAcl -ShareName SMBShare
