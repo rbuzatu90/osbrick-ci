@@ -9,7 +9,7 @@ Param(
 . "C:\OpenStack\osbrick-ci\HyperV\scripts\utils.ps1"
 
 
-Write-Host "post-build: Stoping the services!"
+log_message "post-build: Stoping the services! Job type: $JOB_TYPE"
 
 Stop-Service nova-compute
 
@@ -26,7 +26,7 @@ Remove-Item -Force C:\OpenStack\Log\*.log
 
 Write-Host "post-build: Starting the services!"
 
-Write-Host "Starting nova-compute service"
+log_message "Starting nova-compute service"
 Try
 {
     Start-Service nova-compute
@@ -63,7 +63,7 @@ if ($(get-service nova-compute).Status -eq "Stopped")
     }
 }
 
-Write-Host "Starting neutron-hyperv-agent service"
+log_message "Starting neutron-hyperv-agent service"
 Try
 {
     Start-Service neutron-hyperv-agent
@@ -102,7 +102,7 @@ if ($(get-service neutron-hyperv-agent).Status -eq "Stopped")
 
 if ($JOB_TYPE -eq "smbfs")
     {
-    Write-Host "Starting cinder-volume service"
+    log_message "Starting cinder-volume service"
     Try
     {
         Start-Service cinder-volume
