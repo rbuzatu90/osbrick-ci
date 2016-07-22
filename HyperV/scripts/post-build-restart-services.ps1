@@ -2,7 +2,7 @@
 # Needed to compensate for HyperV building ahead of time
 #
 Param(
-    [string]$jobType='iscsi'
+    [string]$JOB_TYPE='iscsi'
 )
 
 . "C:\OpenStack\osbrick-ci\HyperV\scripts\config.ps1"
