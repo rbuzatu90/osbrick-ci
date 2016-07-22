@@ -56,6 +56,24 @@ Remove-VM * -Force
 
 cleanup_iscsi_targets
 
+if (Get-SMBShare -Name $cinderShareName)
+{
+    log_message "Removing cinder volume share."
+    Remove-SMBShare -Name $cinderShareName
+}
+
+if (Test-Path -Path $volumeShareDir)
+{
+    log_message "Removing cinder volume share dir: $volumeShareDir"
+    Remove-Item -Recurse -Force $volumeShareDir
+}
+
+if (Test-Path -Path $$cinderMntPoint)
+{
+    log_message "Removing cinder share mount point: $$cinderMntPoint"
+    Remove-Item -Recurse -Force $$cinderMntPoint
+}
+
 Write-Host "Cleaning the build folder."
 Remove-Item -Recurse -Force $buildDir\*
 Write-Host "Cleaning the virtualenv folder."

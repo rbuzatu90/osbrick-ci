@@ -27,5 +27,9 @@ $eventlogcsspath = "$templateDir\eventlog_css.txt"
 $eventlogjspath = "$templateDir\eventlog_js.txt"
 $downloadLocation = "http://10.0.110.1/"
 
+$cinderShareName = "SMBShare"
+$volumeShareDir = "C:\$cinderShareName"
+$cinderMntPoint = "C:\OpenStack\_mnt"
+
 $cinderTemplate = "$templateDir\cinder.conf"
 $lockPath = "C:\Openstack\locks"
