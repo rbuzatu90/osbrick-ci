@@ -56,7 +56,7 @@ Remove-VM * -Force
 
 cleanup_iscsi_targets
 
-if (Get-SMBShare -Name $cinderShareName)
+if (Get-SMBShare -Name $cinderShareName -ErrorAction SilentlyContinue)
 {
     log_message "Removing cinder volume share."
     Remove-SMBShare -Name $cinderShareName -Force
