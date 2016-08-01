@@ -19,6 +19,7 @@ $projectName = $buildFor.split('/')[-1]
 $scriptLocation = [System.IO.Path]::GetDirectoryName($myInvocation.MyCommand.Definition)
 . "$scriptLocation\config.ps1"
 . "$scriptLocation\utils.ps1"
+. "$scriptLocation\mpio_utils.ps1"
 
 $hasProject = Test-Path $buildDir\$projectName
 $hasNeutronTemplate = Test-Path $neutronTemplate
@@ -29,6 +30,12 @@ $hasMkisoFs = Test-Path $binDir\mkisofs.exe
 $hasQemuImg = Test-Path $binDir\qemu-img.exe
 if ($hasQemuImg) {
     $hasOldQemuImg = $(& $binDir\qemu-img.exe --version | sls "qemu-img version 1.2.0").Matches.Success
+}
+
+if ($jobType -eq 'fc' -and (! $(mpio_configured) )) {
+    write-host "WARN: MPIO is not configured to claim FC disks on this node."
+    write-host "Configuring MPIO, supressing reboot."
+    configure_mpio
 }
 
 $pip_conf_content = @"
