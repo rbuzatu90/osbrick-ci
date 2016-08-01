@@ -292,13 +292,13 @@ if($jobType -eq 'smbfs')
 ExecRetry {
     pushd $buildDir\os-brick
 
-    # TODO(lpetrut): remove those cherry-picks once all the Windows connectors get in.    
-    # The patch adding the Windows FC connector.
-    git fetch https://git.openstack.org/openstack/os-brick refs/changes/80/323780/8
+    # The patch adding the Windows SMBFS connector.
+    git fetch https://git.openstack.org/openstack/os-brick refs/changes/81/323781/11
     cherry_pick FETCH_HEAD
 
-    # The patch adding the Windows SMBFS connector.
-    git fetch https://git.openstack.org/openstack/os-brick refs/changes/81/323781/8
+    # TODO(lpetrut): remove those cherry-picks once all the Windows connectors get in.
+    # The patch adding the Windows FC connector.
+    git fetch https://git.openstack.org/openstack/os-brick refs/changes/80/323780/11
     cherry_pick FETCH_HEAD
 
     & pip install $buildDir\os-brick
