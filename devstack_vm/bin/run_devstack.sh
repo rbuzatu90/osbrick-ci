@@ -82,6 +82,7 @@ rotate_log $STACK_LOG $STACK_ROTATE_LIMIT
 
 #Requested by Claudiu Belu, temporary hack:
 sudo pip install -U /opt/stack/networking-hyperv
+sudo pip install python-3parclient
 
 nohup ./stack.sh > $STACK_LOG 2>&1 &
 pid=$!
