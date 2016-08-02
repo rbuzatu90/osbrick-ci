@@ -151,6 +151,10 @@ run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY "sudo ln -fs /usr/s
 # copy files to devstack
 scp -v -r -o "StrictHostKeyChecking no" -o "UserKnownHostsFile /dev/null" -i $DEVSTACK_SSH_KEY /usr/local/src/osbrick-ci/devstack_vm/* ubuntu@$FLOATING_IP:/home/ubuntu/
 
+if [ "$JOB_TYPE" == "fc" ]; then
+    run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY 'echo -e "tempest.scenario.test_volume_boot_pattern" >> /home/ubuntu/bin/excluded-tests.txt'
+fi
+
 if [ "$JOB_TYPE" == "smbfs" ]; then
     run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY 'echo -e "tempest.scenario.test_volume_boot_pattern" >> /home/ubuntu/bin/excluded-tests.txt'
 fi
