@@ -43,9 +43,10 @@ class VlanRanges(object):
             update_ret = self.conn.execute("""update vlanIds set devstack="%s" where id='%s';""" % (name, row['id']))
             if update_ret == 0:
                 self.conn.execute("""rollback;""")
-                raise Exception("Failed to get range")
-        self.conn.execute("""COMMIT;""")
-        return "%s:%s" % (row['vlanStart'], row['vlanEnd'])
+            else:
+                self.conn.execute("""COMMIT;""")
+                return "%s:%s" % (row['vlanStart'], row['vlanEnd'])
+        raise Exception("Failed to get VLAN range for devstack id %s" % devstack)
 
     def release_range(self, devstack):
         """ Release range associated to devstack """
@@ -60,7 +61,7 @@ class VlanRanges(object):
         update_ret = self.conn.execute("""update vlanIds set devstack=NULL where devstack='%s';""" % name)
         if update_ret == 0:
             self.conn.execute("""rollback;""")
-            raise Exception("Failed to get range")
+            raise Exception("Failed to release VLAN range for devstack id %s" % devstack)
         self.conn.execute("""COMMIT;""")
         return True
 
