@@ -102,6 +102,7 @@ function archive_hyperv_logs() {
     do
         $GZIP $file
     done
+}
 
 
 function archive_tempest_files() {
