@@ -146,6 +146,7 @@ function cherry_pick($commit) {
     if ($LastExitCode) {
         echo "Ignoring failed git cherry-pick $commit"
         git checkout --force
+        git status
     }
     $ErrorActionPreference = $eapSet
 }
