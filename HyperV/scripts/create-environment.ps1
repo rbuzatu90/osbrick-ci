@@ -313,7 +313,7 @@ ExecRetry {
     # TODO(lpetrut): remove this once the nova patch that sets the Hyper-V driver to use
     # os-brick gets in, or when this is implemented in compute-hyperv.
     # Note: this patch may need to be rebased from time to time.
-    git fetch https://git.openstack.org/openstack/nova refs/changes/04/273504/9
+    git fetch https://git.openstack.org/openstack/nova refs/changes/04/273504/10
     cherry_pick FETCH_HEAD
 
     & pip install $buildDir\nova
