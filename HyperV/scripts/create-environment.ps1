@@ -320,6 +320,9 @@ ExecRetry {
         # This patch fixes os_type image property requirement
         git fetch https://review.openstack.org/openstack/nova refs/changes/26/379326/1
         cherry_pick FETCH_HEAD
+        # Use os-brick for volume related operations
+        git fetch git://git.openstack.org/openstack/nova refs/changes/04/273504/15
+        cherry_pick FETCH_HEAD
     }
 
     & pip install $buildDir\nova
