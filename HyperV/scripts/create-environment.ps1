@@ -238,6 +238,15 @@ if ($isDebug -eq  'yes') {
 }
 
 ExecRetry {
+    pushd "$buildDir\requirements"
+    Write-Host "Installing OpenStack/Requirements..."
+    & pip install -c upper-constraints.txt -U pbr virtualenv httplib2 prettytable>=0.7 setuptools
+    & pip install -c upper-constraints.txt -U .
+    if ($LastExitCode) { Throw "Failed to install openstack/requirements from repo" }
+    popd
+}
+
+ExecRetry {
     if ($isDebug -eq  'yes') {
         Write-Host "Content of $buildDir\neutron"
         Get-ChildItem $buildDir\neutron
