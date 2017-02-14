@@ -8,25 +8,10 @@ Param(
 . "C:\OpenStack\osbrick-ci\HyperV\scripts\config.ps1"
 . "C:\OpenStack\osbrick-ci\HyperV\scripts\utils.ps1"
 
-
-log_message "post-build: Stoping the services! Job type: $JOB_TYPE"
-
-Stop-Service nova-compute
-
-Stop-Service neutron-hyperv-agent
-
-if ($JOB_TYPE -eq "smbfs")
-{
-    Stop-Service cinder-volume
-}
-
-Write-Host "post-build: Cleaning previous logs!"
-
-Remove-Item -Force C:\OpenStack\Log\*.log
-
 Write-Host "post-build: Starting the services!"
 
-log_message "Starting nova-compute service"
+$currDate = (Get-Date).ToString()
+Write-Host "$currDate Starting nova-compute service"
 Try
 {
     Start-Service nova-compute
@@ -41,7 +26,8 @@ Catch
 Start-Sleep -s 30
 if ($(get-service nova-compute).Status -eq "Stopped")
 {
-    Write-Host "We try to start:"
+    $currDate = (Get-Date).ToString()
+    Write-Host "$currDate We try to start:"
     Write-Host Start-Process -PassThru -RedirectStandardError "$openstackLogs\process_error.txt" -RedirectStandardOutput "$openstackLogs\process_output.txt" -FilePath "$pythonDir\Scripts\nova-compute.exe" -ArgumentList "--config-file $configDir\nova.conf"
     Try
     {
@@ -63,7 +49,8 @@ if ($(get-service nova-compute).Status -eq "Stopped")
     }
 }
 
-log_message "Starting neutron-hyperv-agent service"
+$currDate = (Get-Date).ToString()
+Write-Host "$currDate Starting neutron-hyperv-agent service"
 Try
 {
     Start-Service neutron-hyperv-agent
@@ -78,7 +65,8 @@ Catch
 Start-Sleep -s 30
 if ($(get-service neutron-hyperv-agent).Status -eq "Stopped")
 {
-    Write-Host "We try to start:"
+    $currDate = (Get-Date).ToString()
+    Write-Host "$currDate We try to start:"
     Write-Host Start-Process -PassThru -RedirectStandardError "$openstackLogs\process_error.txt" -RedirectStandardOutput "$openstackLogs\process_output.txt" -FilePath "$pythonDir\Scripts\neutron-hyperv-agent.exe" -ArgumentList "--config-file $configDir\neutron_hyperv_agent.conf"
     Try
     {
@@ -102,7 +90,8 @@ if ($(get-service neutron-hyperv-agent).Status -eq "Stopped")
 
 if ($JOB_TYPE -eq "smbfs")
     {
-    log_message "Starting cinder-volume service"
+    $currDate = (Get-Date).ToString()
+    Write-Host "$currDate Starting cinder-volume service"
     Try
     {
         Start-Service cinder-volume
@@ -117,7 +106,8 @@ if ($JOB_TYPE -eq "smbfs")
     Start-Sleep -s 30
     if ($(get-service cinder-volume).Status -eq "Stopped")
     {
-        Write-Host "We try to start:"
+        $currDate = (Get-Date).ToString()
+        Write-Host "$currDate We try to start:"
         Write-Host Start-Process -PassThru -RedirectStandardError "$openstackLogs\process_error.txt" -RedirectStandardOutput "$openstackLogs\process_output.txt" -FilePath "$pythonScripts\cinder-volume.exe" -ArgumentList "--config-file $configDir\cinder.conf"
         Try
         {
