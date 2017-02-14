@@ -94,13 +94,13 @@ function run_ssh_cmd_with_retry () {
 }
 
 function join_hyperv (){
-    run_wsmancmd_with_retry $1 $2 $3 'powershell -ExecutionPolicy RemoteSigned Remove-Item -Recurse -Force C:\OpenStack\osbrick-ci ; git clone https://github.com/cloudbase/osbrick-ci C:\OpenStack\osbrick-ci ; cd C:\OpenStack\osbrick-ci ; git checkout cambridge >>\\'$FIXED_IP'\openstack\logs\create-environment-'$1'.log 2>&1'
+    run_wsmancmd_with_retry $1 $2 $3 'powershell -ExecutionPolicy RemoteSigned Remove-Item -Recurse -Force C:\OpenStack\osbrick-ci ; git clone https://github.com/cloudbase/osbrick-ci C:\OpenStack\osbrick-ci ; cd C:\OpenStack\osbrick-ci ; git checkout cambridge >> '$LOG_DIR'\create-environment.log 2>&1'
     run_wsmancmd_with_retry $1 $2 $3 'powershell -ExecutionPolicy RemoteSigned C:\OpenStack\osbrick-ci\HyperV\scripts\teardown.ps1'
-    [ "$IS_DEBUG_JOB" == "yes" ] && run_wsmancmd_with_retry $1 $2 $3 '"powershell Write-Host Calling gerrit with zuul-site='$ZUUL_SITE' gerrit-site='$ZUUL_SITE' zuul-ref='$ZUUL_REF' zuul-change='$ZUUL_CHANGE' zuul-project='$ZUUL_PROJECT' >>\\'$FIXED_IP'\openstack\logs\create-environment-'$1'.log 2>&1"'
-    run_wsmancmd_with_retry $1 $2 $3 '"bash C:\OpenStack\osbrick-ci\HyperV\scripts\gerrit-git-prep.sh --zuul-site '$ZUUL_SITE' --gerrit-site '$ZUUL_SITE' --zuul-ref '$ZUUL_REF' --zuul-change '$ZUUL_CHANGE' --zuul-project '$ZUUL_PROJECT' >>\\'$FIXED_IP'\openstack\logs\create-environment-'$1'.log 2>&1"'
-    run_wsmancmd_with_retry $1 $2 $3 'powershell -ExecutionPolicy RemoteSigned C:\OpenStack\osbrick-ci\HyperV\scripts\EnsureOpenStackServices.ps1 Administrator H@rd24G3t >>\\'$FIXED_IP'\openstack\logs\create-environment-'$1'.log 2>&1'
-    [ "$IS_DEBUG_JOB" == "yes" ] && run_wsmancmd_with_retry $1 $2 $3 '"powershell Write-Host Calling create-environment with devstackIP='$FIXED_IP' branchName='$ZUUL_BRANCH' buildFor='$ZUUL_PROJECT' '$IS_DEBUG_JOB' >>\\'$FIXED_IP'\openstack\logs\create-environment-'$1'.log 2>&1"'
-    run_wsmancmd_with_retry $1 $2 $3 '"powershell -ExecutionPolicy RemoteSigned C:\OpenStack\osbrick-ci\HyperV\scripts\create-environment.ps1 -devstackIP '$FIXED_IP' -branchName '$ZUUL_BRANCH' -buildFor '$ZUUL_PROJECT' -zuulChange '$ZUUL_CHANGE' -jobType '$4' '$IS_DEBUG_JOB' >>\\'$FIXED_IP'\openstack\logs\create-environment-'$1'.log 2>&1"'
+    [ "$IS_DEBUG_JOB" == "yes" ] && run_wsmancmd_with_retry $1 $2 $3 '"powershell Write-Host Calling gerrit with zuul-site='$ZUUL_SITE' gerrit-site='$ZUUL_SITE' zuul-ref='$ZUUL_REF' zuul-change='$ZUUL_CHANGE' zuul-project='$ZUUL_PROJECT' >> '$LOG_DIR'\create-environment.log 2>&1"'
+    run_wsmancmd_with_retry $1 $2 $3 '"bash C:\OpenStack\osbrick-ci\HyperV\scripts\gerrit-git-prep.sh --zuul-site '$ZUUL_SITE' --gerrit-site '$ZUUL_SITE' --zuul-ref '$ZUUL_REF' --zuul-change '$ZUUL_CHANGE' --zuul-project '$ZUUL_PROJECT' >> '$LOG_DIR'\create-environment.log 2>&1"'
+    run_wsmancmd_with_retry $1 $2 $3 'powershell -ExecutionPolicy RemoteSigned C:\OpenStack\osbrick-ci\HyperV\scripts\EnsureOpenStackServices.ps1 Administrator H@rd24G3t >> '$LOG_DIR'\create-environment.log 2>&1'
+    [ "$IS_DEBUG_JOB" == "yes" ] && run_wsmancmd_with_retry $1 $2 $3 '"powershell Write-Host Calling create-environment with devstackIP='$FIXED_IP' branchName='$ZUUL_BRANCH' buildFor='$ZUUL_PROJECT' '$IS_DEBUG_JOB' >> '$LOG_DIR'\create-environment.log 2>&1"'
+    run_wsmancmd_with_retry $1 $2 $3 '"powershell -ExecutionPolicy RemoteSigned C:\OpenStack\osbrick-ci\HyperV\scripts\create-environment.ps1 -devstackIP '$FIXED_IP' -branchName '$ZUUL_BRANCH' -buildFor '$ZUUL_PROJECT' -zuulChange '$ZUUL_CHANGE' -jobType '$4' '$IS_DEBUG_JOB' >> '$LOG_DIR'\create-environment.log 2>&1"'
 }
 
 function teardown_hyperv () {
@@ -108,7 +108,7 @@ function teardown_hyperv () {
 }
 
 function post_build_restart_hyperv_services (){
-    run_wsmancmd_with_retry $1 $2 $3 '"powershell -ExecutionPolicy RemoteSigned C:\OpenStack\osbrick-ci\HyperV\scripts\post-build-restart-services.ps1 '$4' >>\\'$FIXED_IP'\openstack\logs\create-environment-'$1'.log 2>&1"'
+    run_wsmancmd_with_retry $1 $2 $3 '"powershell -ExecutionPolicy RemoteSigned C:\OpenStack\osbrick-ci\HyperV\scripts\post-build-restart-services.ps1 '$4' >> '$LOG_DIR'\create-environment.log 2>&1"'
 }
 
 function poll_shh () {

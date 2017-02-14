@@ -1,7 +1,11 @@
 #!/bin/bash
 
+hyperv01=$1
+IS_DEBUG_JOB=$2
+
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 . $DIR/config.sh
+. $DIR/utils.sh
 
 TAR=$(which tar)
 GZIP=$(which gzip)
@@ -57,7 +61,7 @@ function archive_devstack_configs() {
         mkdir -p "$CONFIG_DST_DEVSTACK" || emit_warning "L38: Failed to archive devstack configs"
     fi
     
-    for i in cinder glance keystone neutron nova openvswitch
+    for i in ceilometer cinder glance keystone neutron nova swift openvswitch
     do
         cp -r -L "/etc/$i" "$CONFIG_DST_DEVSTACK/$i"
     done
@@ -103,24 +107,41 @@ function archive_hyperv_logs() {
         $GZIP $file
     done
 }
-
-
 function archive_tempest_files() {
-    for i in `ls $TEMPEST_LOGS`
-    do
-        $GZIP "$TEMPEST_LOGS/$i" -c > "$LOG_DST/$i.gz" || emit_warning "L133: Failed to archive tempest logs"
-    done
+    if [ -d "$TEMPEST_LOGS" ]
+    then
+        pushd "$TEMPEST_LOGS"
+        find . -type f -exec gzip "{}" \;
+        popd
+        cp -r "$TEMPEST_LOGS" "$LOG_DST"
+    fi
 }
 
 # Clean
 [ -d "$LOG_DST" ] && rm -rf "$LOG_DST"
 mkdir -p "$LOG_DST"
 
+if [ "$IS_DEBUG_JOB" != "yes" ]; then 
+    echo "Stop devstack services"
+    cd /home/ubuntu/devstack
+    ./unstack.sh
+fi
+
+set +e
+
+echo Getting Hyper-V logs
+get_win_files $hyperv01 "\OpenStack\logs" "$LOG_DST_HV/$hyperv01-compute01"
+
+echo Getting Hyper-V configs
+get_win_files $hyperv01 "\OpenStack\etc" "$CONFIG_DST_HV/$hyperv01-compute01"
+
 archive_devstack_logs
 archive_devstack_configs
 archive_hyperv_configs
 archive_hyperv_logs
 archive_tempest_files
+
+set -e
 
 pushd "$LOG_DST"
 $TAR -czf "$LOG_DST.tar.gz" . || emit_error "L147: Failed to archive aggregate logs"

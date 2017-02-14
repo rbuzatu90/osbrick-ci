@@ -2,6 +2,14 @@ source /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.$JOB_TYPE.txt
 source /home/jenkins-slave/tools/keystonerc_admin
 source /usr/local/src/osbrick-ci/jobs/library.sh
 
+echo "devstack_params file:"
+ls -lia /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.txt
+echo "devstack params loaded from /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.txt :"
+cat /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.txt
+echo "VM ID: $VMID"
+echo "VMs matching that VM ID:"
+nova list | grep "$VMID"
+
 set +e
 
 if [ "$IS_DEBUG_JOB" != "yes" ]
@@ -11,15 +19,10 @@ if [ "$IS_DEBUG_JOB" != "yes" ]
         teardown_hyperv $hyperv01 $WIN_USER $WIN_PASS
         echo "$jen_date;$ZUUL_PROJECT;$ZUUL_BRANCH;$ZUUL_CHANGE;$ZUUL_PATCHSET;$JOB_TYPE;$hyperv01;FREE" >> /home/jenkins-slave/hypervnodes.log
 
-        echo "Releasing devstack floating IP"
-        nova remove-floating-ip "$VMID" "$FLOATING_IP"
-        
         echo "Removing devstack VM"
         nova delete "$VMID"
         /usr/local/src/osbrick-ci/vlan_allocation.py -r $VMID
         
-        echo "Deleting devstack floating IP"
-        nova floating-ip-delete "$FLOATING_IP"
         rm -f /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.$JOB_TYPE.txt
 fi
 

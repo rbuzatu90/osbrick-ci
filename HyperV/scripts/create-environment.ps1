@@ -42,9 +42,9 @@ if ($jobType -eq 'fc' -and (! $(mpio_configured) )) {
 
 $pip_conf_content = @"
 [global]
-index-url = http://10.0.110.1:8080/cloudbase/CI/+simple/
+index-url = http://10.20.1.8:8080/cloudbase/CI/+simple/
 [install]
-trusted-host = 10.0.110.1
+trusted-host = 10.20.1.8
 "@
 
 $ErrorActionPreference = "SilentlyContinue"
@@ -124,7 +124,7 @@ if ($hasBinDir -eq $false){
 }
 
 if (($hasMkisoFs -eq $false) -or ($hasQemuImg -eq $false) -or ($hasOldQemuImg -eq $true)){
-    Invoke-WebRequest -Uri "http://10.0.110.1/openstack_bin.zip" -OutFile "$bindir\openstack_bin.zip"
+    Invoke-WebRequest -Uri "http://10.20.1.14:8080/openstack_bin.zip" -OutFile "$bindir\openstack_bin.zip"
     [System.IO.Compression.ZipFile]::ExtractToDirectory("$bindir\openstack_bin.zip", "$bindir")
     Remove-Item -Force "$bindir\openstack_bin.zip"
 }
@@ -171,20 +171,14 @@ if ($hasLogDir -eq $false){
     mkdir $openstackLogs
 }
 
-$hasConfigDir = Test-Path $remoteConfigs\$hostname
-if ($hasConfigDir -eq $false){
-    mkdir $remoteConfigs\$hostname
-}
-
-pushd C:\
 if (Test-Path $pythonArchive)
 {
     Remove-Item -Force $pythonArchive
 }
-Invoke-WebRequest -Uri http://10.0.110.1/python.zip -OutFile $pythonArchive
+Invoke-WebRequest -Uri http://10.20.1.14:8080/python.zip -OutFile $pythonArchive
 if (Test-Path $pythonDir)
 {
-    Remove-Item -Recurse -Force $pythonDir
+    Cmd /C "rmdir /S /Q $pythonDir"
 }
 Write-Host "Ensure Python folder is up to date"
 Write-Host "Extracting archive.."
@@ -200,7 +194,6 @@ else
 }
 Add-Content "$env:APPDATA\pip\pip.ini" $pip_conf_content
 
-& easy_install -U pip
 & pip install -U setuptools
 & pip install -U virtualenv
 & pip install -U distribute
@@ -325,21 +318,6 @@ ExecRetry {
     }
     pushd $buildDir\nova
 
-    # TODO(lpetrut): remove this once the nova patch that sets the Hyper-V driver to use
-    # os-brick gets in, or when this is implemented in compute-hyperv.
-    # Note: this patch may need to be rebased from time to time.
-    git fetch https://git.openstack.org/openstack/nova refs/changes/04/273504/10
-    cherry_pick FETCH_HEAD
-
-    if ($branchName -eq 'master') {
-        # This patch fixes os_type image property requirement
-        git fetch https://review.openstack.org/openstack/nova refs/changes/26/379326/1
-        cherry_pick FETCH_HEAD
-        # Use os-brick for volume related operations
-        git fetch git://git.openstack.org/openstack/nova refs/changes/04/273504/15
-        cherry_pick FETCH_HEAD
-    }
-
     Write-Host "Installing openstack/nova..."
     & update-requirements.exe --source $buildDir\requirements .
     & pip install -c $buildDir\requirements\upper-constraints.txt -U .
@@ -384,129 +362,4 @@ if ($hasNeutronExec -eq $false){
 }
 
 
-Remove-Item -Recurse -Force "$remoteConfigs\$hostname\*"
-Copy-Item -Recurse $configDir "$remoteConfigs\$hostname"
-
-Write-Host "Starting the services"
-
-
-
-if ($jobType -eq 'smbfs')
-{
-    $currDate = (Get-Date).ToString()
-    Write-Host "$currDate Starting cinder-volume service"
-    Try
-    {
-        Start-Service cinder-volume
-    }
-    Catch
-    {
-        Write-Host "Can not start the cinder-volume service."
-    }
-    Start-Sleep -s 30
-    if ($(get-service cinder-volume).Status -eq "Stopped")
-    {
-        Write-Host "cinder-volume service is not running."
-        $currDate = (Get-Date).ToString()
-        Write-Host "$currDate We try to start:"
-        Write-Host Start-Process -PassThru -RedirectStandardError "$openstackLogs\process_error.txt" -RedirectStandardOutput "$openstackLogs\process_output.txt" -FilePath "$pythonDir\Scripts\cinder-volume.exe" -ArgumentList "--config-file $configDir\cinder.conf"
-        $currDate = (Get-Date).ToString()
-        Add-Content "$openstackLogs\cinder-volume.log" "`n$currDate Starting cinder-volume as a python process."
-        Try
-        {
-            $proc = Start-Process -PassThru -RedirectStandardError "$openstackLogs\process_error.txt" -RedirectStandardOutput "$openstackLogs\process_output.txt" -FilePath "$pythonDir\Scripts\cinder-volume.exe" -ArgumentList "--config-file $configDir\cinder.conf"
-        }
-        Catch
-        {
-            Throw "Could not start the process manually"
-        }
-        Start-Sleep -s 30
-        if (! $proc.HasExited)
-        {
-            Stop-Process -Id $proc.Id -Force
-            Throw "Process started fine when run manually."
-        }
-        else
-        {
-            Throw "Can not start the cinder-volume service. The manual run failed as well."
-        }
-    }
-}
-
-$currDate = (Get-Date).ToString()
-Write-Host "$currDate Starting nova-compute service"
-Try
-{
-    Start-Service nova-compute
-}
-Catch
-{
-    Write-Host "Can not start the nova-compute service."
-}
-Start-Sleep -s 30
-if ($(get-service nova-compute).Status -eq "Stopped")
-{
-    Write-Host "nova-compute service is not running."
-    $currDate = (Get-Date).ToString()
-    Write-Host "$currDate We try to start:"
-    Write-Host Start-Process -PassThru -RedirectStandardError "$openstackLogs\process_error.txt" -RedirectStandardOutput "$openstackLogs\process_output.txt" -FilePath "$pythonDir\Scripts\nova-compute.exe" -ArgumentList "--config-file $configDir\nova.conf"
-    $currDate = (Get-Date).ToString()
-    Add-Content "$openstackLogs\nova-compute.log" "`n$currDate Starting nova-compute as a python process."
-    Try
-    {
-    	$proc = Start-Process -PassThru -RedirectStandardError "$openstackLogs\process_error.txt" -RedirectStandardOutput "$openstackLogs\process_output.txt" -FilePath "$pythonDir\Scripts\nova-compute.exe" -ArgumentList "--config-file $configDir\nova.conf"
-    }
-    Catch
-    {
-    	Throw "Could not start the process manually"
-    }
-    Start-Sleep -s 30
-    if (! $proc.HasExited)
-    {
-    	Stop-Process -Id $proc.Id -Force
-    	Throw "Process started fine when run manually."
-    }
-    else
-    {
-    	Throw "Can not start the nova-compute service. The manual run failed as well."
-    }
-}
-
-$currDate = (Get-Date).ToString()
-Write-Host "$currDate Starting neutron-hyperv-agent service"
-Try
-{
-    Start-Service neutron-hyperv-agent
-}
-Catch
-{
-    Write-Host "Can not start the neutron-hyperv-agent service."
-}
-Start-Sleep -s 30
-if ($(get-service neutron-hyperv-agent).Status -eq "Stopped")
-{
-    Write-Host "neutron-hyperv-agent service is not running."
-    $currDate = (Get-Date).ToString()
-    Write-Host "$currDate We try to start:"
-     Write-Host Start-Process -PassThru -RedirectStandardError "$openstackLogs\process_error.txt" -RedirectStandardOutput "$openstackLogs\process_output.txt" -FilePath "$pythonScripts\neutron-hyperv-agent.exe" -ArgumentList "--config-file $configDir\neutron_hyperv_agent.conf"
-    $currDate = (Get-Date).ToString()
-    Add-Content "$openstackLogs\neutron-hyperv-agent.log" "`n$currDate starting neutron-hyperv-agent as a python process."
-    Try
-    {
-    	$proc = Start-Process -PassThru -RedirectStandardError "$openstackLogs\process_error.txt" -RedirectStandardOutput "$openstackLogs\process_output.txt" -FilePath "$pythonScripts\neutron-hyperv-agent.exe" -ArgumentList "--config-file $configDir\neutron_hyperv_agent.conf"
-    }
-    Catch
-    {
-    	Throw "Could not start the process manually"
-    }
-    Start-Sleep -s 30
-    if (! $proc.HasExited)
-    {
-    	Stop-Process -Id $proc.Id -Force
-    	Throw "Process started fine when run manually."
-    }
-    else
-    {
-    	Throw "Can not start the neutron-hyperv-agent service. The manual run failed as well."
-    }
-}
+Write-Host "Done buildiing env"
