@@ -196,7 +196,7 @@ run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY "/home/ubuntu/bin/g
 # get locally the vhdx files used by tempest
 run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY "mkdir -p /home/ubuntu/devstack/files/images"
 run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY "wget http://10.20.1.14:8080/cirros-latest.vhdx -O /home/ubuntu/devstack/files/images/cirros-latest.vhdx"
-run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY "wget http://10.0.110.1/Fedora-x86_64-20-20140618-sda.vhdx.gz -O /home/ubuntu/devstack/files/images/Fedora-x86_64-20-20140618-sda.vhdx.gz"
+run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY "wget http://10.20.1.14:8080/Fedora-x86_64-20-20140618-sda.vhdx.gz -O /home/ubuntu/devstack/files/images/Fedora-x86_64-20-20140618-sda.vhdx.gz"
 
 # install neutron pip package as it is external
 # run_ssh_cmd_with_retry ubuntu@$FLOATING_IP $DEVSTACK_SSH_KEY "sudo pip install -U networking-hyperv --pre"
