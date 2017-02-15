@@ -32,6 +32,7 @@ fi
 export NAME=$NAME
 
 echo NAME=$NAME | tee -a /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.$JOB_TYPE.txt
+echo JOB_TYPE=$JOB_TYPE | tee -a /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.$JOB_TYPE.txt
 echo ZUUL_PROJECT=$ZUUL_PROJECT | tee -a /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.$JOB_TYPE.txt
 echo ZUUL_BRANCH=$ZUUL_BRANCH | tee -a /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.$JOB_TYPE.txt
 echo ZUUL_CHANGE=$ZUUL_CHANGE | tee -a /home/jenkins-slave/runs/devstack_params.$ZUUL_UUID.$JOB_TYPE.txt
