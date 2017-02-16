@@ -194,6 +194,9 @@ else
 }
 Add-Content "$env:APPDATA\pip\pip.ini" $pip_conf_content
 
+$ErrorActionPreference = "SilentlyContinue"
+
+& easy_install -U pip
 & pip install -U setuptools
 & pip install -U virtualenv
 & pip install -U distribute
@@ -205,6 +208,8 @@ Add-Content "$env:APPDATA\pip\pip.ini" $pip_conf_content
 & pip install amqp==1.4.9
 & pip install pymysql
 & pip install mysqlclient
+
+$ErrorActionPreference = "Stop"
 
 popd
 
