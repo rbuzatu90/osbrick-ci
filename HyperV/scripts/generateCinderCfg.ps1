@@ -11,7 +11,7 @@ $scriptLocation = [System.IO.Path]::GetDirectoryName($myInvocation.MyCommand.Def
 . "$scriptLocation\utils.ps1"
 
 
-$serverIP =  (Get-NetIPAddress -AddressFamily IPv4 -PrefixOrigin Dhcp).IPAddress
+$serverIP = (Get-NetIPAddress -AddressFamily IPv4).IPv4Address -like "10.250*" 
 $volumeDriver = 'cinder.volume.drivers.windows.smbfs.WindowsSmbfsDriver'
 $smbSharesConfigPath = "$configDir\smbfs_shares_config.txt"
 $configFile = "$configDir\cinder.conf"
