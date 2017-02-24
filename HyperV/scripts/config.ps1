@@ -9,6 +9,7 @@ $configDir = "$openstackDir\etc"
 $templateDir = "$baseDir\templates"
 $buildDir = "$openstackDir\build"
 $binDir = "$openstackDir\bin"
+$qemuImgDir = "C:\qemu-img"
 $novaTemplate = "$templateDir\nova.conf"
 $neutronTemplate = "$templateDir\neutron_hyperv_agent.conf"
 $hostname = hostname

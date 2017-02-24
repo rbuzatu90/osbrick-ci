@@ -27,12 +27,8 @@ $hasNovaTemplate = Test-Path $novaTemplate
 $hasConfigDir = Test-Path $configDir
 $hasBinDir = Test-Path $binDir
 $hasMkisoFs = Test-Path $binDir\mkisofs.exe
-$hasQemuImg = Test-Path $binDir\qemu-img.exe
+$hasQemuImg = $(& $qemuImgDir\qemu-img.exe --version | sls "qemu-img version 2.3.0").Matches.Success
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-
-if ($hasQemuImg) {
-    $hasOldQemuImg = $(& $binDir\qemu-img.exe --version | sls "qemu-img version 1.2.0").Matches.Success
-}
 
 if ($jobType -eq 'fc' -and (! $(mpio_configured) )) {
     write-host "WARN: MPIO is not configured to claim FC disks on this node."
@@ -123,11 +119,22 @@ if ($hasBinDir -eq $false){
     mkdir $binDir
 }
 
-if (($hasMkisoFs -eq $false) -or ($hasQemuImg -eq $false) -or ($hasOldQemuImg -eq $true)){
+if ($hasMkisoFs -eq $false){
     Remove-Item -Force "$bindir\*" 
     Invoke-WebRequest -Uri "http://10.20.1.14:8080/openstack_bin.zip" -OutFile "$bindir\openstack_bin.zip"
     [System.IO.Compression.ZipFile]::ExtractToDirectory("$bindir\openstack_bin.zip", "$bindir")
     Remove-Item -Force "$bindir\openstack_bin.zip"
+}
+
+if (-not $hasQemuImg){ 
+    Invoke-WebRequest -Uri http://10.20.1.14:8080/qemu-img-cbsl-build.zip -OutFile c:\qemu-img-cbsl-build.zip
+    if (Test-Path -Path c:\qemu-img){
+        Remove-Item -Force -Recurse c:\qemu-img
+    }
+    unzip c:\qemu-img-cbsl-build.zip c:\
+    if (-not $($env:Path | sls 'C:\\qemu-img\\').Matches.Success) { 
+        $env:Path += ';C:\qemu-img'; setx PATH $env:Path
+    }
 }
 
 if ($hasNovaTemplate -eq $false){
