@@ -179,6 +179,7 @@ if ($hasLogDir -eq $false){
     mkdir $openstackLogs
 }
 
+pushd C:\
 if (Test-Path $pythonArchive)
 {
     Remove-Item -Force $pythonArchive
